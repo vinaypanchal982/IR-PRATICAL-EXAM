@@ -1,0 +1,73 @@
+practical 3
+
+Aim: Spelling Correction in IR Systems   
+● Develop a spelling correction module using edit distance algorithms.   
+● Integrate the spelling correction module into an information retrieval system. 
+
+
+
+def edit_distance(str1, str2):
+    m, n = len(str1), len(str2)
+
+    
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    
+    for i in range(m + 1):
+        for j in range(n + 1):
+
+            
+            if i == 0:
+                dp[i][j] = j
+
+            
+            elif j == 0:
+                dp[i][j] = i
+
+            
+            elif str1[i - 1] == str2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+
+            
+            else:
+                dp[i][j] = 1 + min(
+                    dp[i][j - 1],     
+                    dp[i - 1][j],    
+                    dp[i - 1][j - 1]  
+                )
+
+    return dp[m][n]
+
+
+def correct_spelling(query, dictionary, max_distance=2):
+    query = query.lower()
+    suggestions = []
+
+    for word in dictionary:
+        distance = edit_distance(query, word.lower())
+
+        if distance <= max_distance:
+            suggestions.append((word, distance))
+
+    
+    suggestions.sort(key=lambda x: x[1])
+
+    return suggestions
+
+
+
+dictionary = ["information", "retrieval", "spelling", "correction", "system"]
+
+
+query = input("Enter your query: ")
+
+
+suggestions = correct_spelling(query, dictionary)
+
+
+if suggestions:
+    print("\nDid you mean:")
+    for word, distance in suggestions:
+        print(f"  {word}  (Edit Distance: {distance})")
+else:
+    print("No suggestions found.")

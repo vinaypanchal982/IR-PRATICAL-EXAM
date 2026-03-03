@@ -1,0 +1,196 @@
+Aim: Retrieval Models  
+Practical No 2 has  (A) & down (B)
+● Implement the Boolean retrieval model and process queries.  
+
+
+documents = {
+    1: "apple banana orange",
+    2: "apple banana",
+    3: "banana orange",
+    4: "apple"
+}
+
+
+def build_index(docs):
+    index = {}  
+    
+    for doc_id, text in docs.items():
+        terms = set(text.split())  
+        
+        for term in terms:
+            if term not in index:
+                index[term] = {doc_id}
+            else:
+                index[term].add(doc_id)
+    
+    return index
+
+
+
+inverted_index = build_index(documents)
+
+
+
+def boolean_and(operands, index):
+    if not operands:
+        return []
+    
+    result = index.get(operands[0], set())
+    
+    for term in operands[1:]:
+        result = result.intersection(index.get(term, set()))
+    
+    return sorted(list(result))
+
+
+
+
+def boolean_or(operands, index):
+    result = set()
+    
+    for term in operands:
+        result = result.union(index.get(term, set()))
+    
+    return sorted(list(result))
+
+
+
+
+def boolean_not(operand, index, total_docs):
+    operand_set = index.get(operand, set())
+    all_docs_set = set(range(1, total_docs + 1))
+    
+    return sorted(list(all_docs_set.difference(operand_set)))
+
+
+
+
+query1 = ["apple", "banana"]     # AND query
+query2 = ["apple", "orange"]     # OR query
+
+result1 = boolean_and(query1, inverted_index)
+result2 = boolean_or(query2, inverted_index)
+result3 = boolean_not("orange", inverted_index, len(documents))
+
+
+
+print("Inverted Index:")
+for term, doc_ids in inverted_index.items():
+    print(term, "->", sorted(list(doc_ids)))
+
+print("\nBoolean Query Results:")
+print("Documents containing 'apple' AND 'banana':", result1)
+print("Documents containing 'apple' OR 'orange':", result2)
+print("Documents NOT containing 'orange':", result3)
+ 
+● Implement the vector space model with TF-IDF weighting and cosine similarity. (B) here
+
+
+
+import math
+from collections import Counter
+
+
+
+def tokenize(text):
+    return text.lower().replace(".", "").replace("?", "").split()
+
+
+
+
+def compute_tf(doc):
+    words = tokenize(doc)
+    word_count = Counter(words)
+    total_words = len(words)
+    
+    tf = {word: count / total_words for word, count in word_count.items()}
+    return tf
+
+
+
+
+def compute_idf(documents):
+    N = len(documents)
+    idf = {}
+    
+    for doc in documents:
+        terms = set(tokenize(doc))
+        for term in terms:
+            idf[term] = idf.get(term, 0) + 1
+    
+    
+    idf = {term: math.log(N / freq) for term, freq in idf.items()}
+    
+    return idf
+
+
+
+
+def compute_tf_idf(tf, idf):
+    return {term: tf[term] * idf.get(term, 0) for term in tf}
+
+
+
+
+def compute_cosine_similarity(vec1, vec2):
+    
+   
+    common_terms = set(vec1.keys()) & set(vec2.keys())
+    
+   
+    dot_product = sum(vec1[t] * vec2[t] for t in common_terms)
+    
+    
+    norm1 = math.sqrt(sum(v**2 for v in vec1.values()))
+    norm2 = math.sqrt(sum(v**2 for v in vec2.values()))
+    
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    
+    return dot_product / (norm1 * norm2)
+
+
+
+
+def vector_space_model(documents, query):
+    
+    
+    idf = compute_idf(documents)
+    
+    
+    doc_vectors = []
+    for doc in documents:
+        tf = compute_tf(doc)
+        tf_idf = compute_tf_idf(tf, idf)
+        doc_vectors.append(tf_idf)
+    
+    
+    query_tf = compute_tf(query)
+    query_tf_idf = compute_tf_idf(query_tf, idf)
+    
+    
+    similarities = []
+    for doc_vector in doc_vectors:
+        sim = compute_cosine_similarity(query_tf_idf, doc_vector)
+        similarities.append(sim)
+    
+    return similarities
+
+
+
+documents = [
+    "This is the first document.",
+    "This document is the second document.",
+    "And this is the third one.",
+    "Is this the first document?"
+]
+
+query = "This is a query document."
+
+similarities = vector_space_model(documents, query)
+
+print("Cosine Similarities:")
+for i, sim in enumerate(similarities):
+    print(f"Document {i + 1}: {round(sim, 4)}")
+
+

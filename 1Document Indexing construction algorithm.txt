@@ -1,0 +1,50 @@
+Aim: Document Indexing and Retrieval   
+● Implement an inverted index construction algorithm.   
+● Build a simple document retrieval system using the constructed index.
+
+
+
+
+document1 = "The quick brown fox jumped over the lazy dog."
+document2 = "The lazy dog slept in the sun."
+
+documents = {
+    "Document 1": document1,
+    "Document 2": document2
+}
+
+
+
+tokenized_docs = {}
+
+for doc_name, text in documents.items():
+    tokens = text.lower().replace(".", "").split()
+    tokenized_docs[doc_name] = tokens
+
+
+inverted_index = {}
+
+for doc_name, tokens in tokenized_docs.items():
+    for term in tokens:
+        if term not in inverted_index:
+            inverted_index[term] = []
+        if doc_name not in inverted_index[term]:
+            inverted_index[term].append(doc_name)
+
+
+
+print("----- Inverted Index -----\n")
+for term in sorted(inverted_index.keys()):
+    print(f"{term} -> {', '.join(inverted_index[term])}")
+
+
+
+print("\n----- Document Retrieval -----")
+query = input("Enter search term: ").lower()
+
+if query in inverted_index:
+    print("Term found in:")
+    for doc in inverted_index[query]:
+        print(doc)
+else:
+    print("Term not found in any document.")
